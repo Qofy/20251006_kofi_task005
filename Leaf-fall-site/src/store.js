@@ -47,14 +47,16 @@ export default createStore({
       state.isShownPreloader = true;
     },
     setPreloadMax(state, num) {
-      state.preloadMax = num;
+      state.preloadMax = Math.max(num, 10); // Minimum 10 for development
     },
     updatePreloadAnchor(state) {
       state.preloadAnchor++;
     },
     updatePreloadProgress(state) {
-      state.preloadProgress +=
-        (state.preloadAnchor - state.preloadProgress) / 14;
+      state.preloadProgress++;
+      if (state.preloadProgress >= state.preloadMax) {
+        state.preloadMax = Math.max(state.preloadMax, 10); // Ensure minimum
+      }
     },
     loaded(state) {
       state.isLoaded = true;
