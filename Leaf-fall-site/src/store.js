@@ -11,7 +11,7 @@ const INTERVAL_TO_FIRE_WHEEL = 1000;
 export default createStore({
   state: {
     globalId: 0,
-    canvas: document.createElement('canvas'),
+    canvas: null,
     resolution: new THREE.Vector2(),
     mouse: new THREE.Vector2(),
     mousePrev: new THREE.Vector2(),
@@ -134,6 +134,9 @@ export default createStore({
       state.touchMove.set(0, 0);
       state.isTouchStarted = false;
       state.isTouchMoving = false;
+    },
+    setCanvas(state, canvas) {
+      state.canvas = canvas;
     }
   },
   actions: {

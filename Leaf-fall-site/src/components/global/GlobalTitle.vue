@@ -1,14 +1,16 @@
 <template lang="pug">
   .c-global-title
-    h1.c-global-title__text {{ title }}
+    router-link.title-link(to="/")
+      h1.title Yoichi Kobayashi
+      p.subtitle(:class="{ 'home-subtitle': isHome }") Creative Developer
 </template>
 
 <script>
 export default {
   name: 'GlobalTitle',
   computed: {
-    title() {
-      return this.$route.meta?.title || 'Yoichi Kobayashi';
+    isHome() {
+      return this.$route.name === 'Home';
     }
   }
 }
@@ -17,14 +19,50 @@ export default {
 <style lang="scss">
 .c-global-title {
   position: fixed;
-  top: 20px;
-  left: 20px;
+  top: 2rem;
+  left: 2rem;
   z-index: 100;
   
-  &__text {
-    font-size: 1.2rem;
-    color: #333;
+  .title-link {
+    text-decoration: none;
+    color: inherit;
+    
+    &:hover {
+      .title {
+        color: #FFD700; // Gold on hover
+        transform: translateY(-2px);
+      }
+    }
+  }
+  
+  .title {
+    font-size: 1.8rem;
+    font-weight: 300;
     margin: 0;
+    color: #FFFFFF; // White default
+    transition: all 0.3s ease;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    
+    @media (max-width: 768px) {
+      font-size: 1.4rem;
+    }
+  }
+  
+  .subtitle {
+    font-size: 0.9rem;
+    margin: 0.2rem 0 0 0;
+    color: #87CEEB; // Sky blue default
+    opacity: 0.9;
+    font-weight: 400;
+    transition: all 0.3s ease;
+    
+    &.home-subtitle {
+      color: #98FB98; // Light green for home page
+    }
+    
+    @media (max-width: 768px) {
+      font-size: 0.8rem;
+    }
   }
 }
 </style>

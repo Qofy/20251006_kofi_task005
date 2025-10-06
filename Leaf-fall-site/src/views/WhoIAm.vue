@@ -1,61 +1,53 @@
 <script>
-import sleep from '@/utils/sleep';
-import MathEx from '@/utils/MathEx';
 import normalizeWheel from 'normalize-wheel';
-
-import store from '@/store';
-import WhoIAmSection from '@/components/who-i-am/WhoIAmSection.vue';
+import sleep from '@/utils/sleep';
 import WhoIAmHeading from '@/components/who-i-am/WhoIAmHeading.vue';
-import WhoIAmThanks from '@/components/who-i-am/WhoIAmThanks.vue';
+import WhoIAmSection from '@/components/who-i-am/WhoIAmSection.vue';
 import WhoIAmLinks from '@/components/who-i-am/WhoIAmLinks.vue';
+import WhoIAmThanks from '@/components/who-i-am/WhoIAmThanks.vue';
 
 export default {
   name: 'WhoIAm',
   metaInfo: {
-    title: 'Who I am / '
+    title: 'Who I Am / '
   },
   components: {
-    WhoIAmSection,
     WhoIAmHeading,
-    WhoIAmThanks,
-    WhoIAmLinks
+    WhoIAmSection,
+    WhoIAmLinks,
+    WhoIAmThanks
   },
   data() {
     return {
-      scrollY: 0,
-      anchorY: 0,
-      clientHeight: 0,
-      isRendering: false
-    };
-  },
-  watch: {
-    async '$store.state.resolution.y'() {
-      await sleep(10);
-      this.resize();
-    }
-  },
-  computed: {
-    styles() {
-      return {
-        paddingTop: `${this.$store.state.resolution.y / 2}px`,
-        transform: `translate3d(0, ${-this.scrollY}px, 0)`
-      };
+      skills: [
+        'JavaScript', 'Vue.js', 'Three.js', 'WebGL', 'GLSL',
+        'HTML5', 'CSS3', 'Node.js', 'Creative Coding', 'Interactive Design'
+      ],
+      experience: [
+        {
+          title: 'Creative Developer',
+          company: 'Digital Agency',
+          period: '2022 - Present',
+          description: 'Creating interactive web experiences with WebGL and modern JavaScript frameworks.'
+        },
+        {
+          title: 'Frontend Developer',
+          company: 'Tech Startup',
+          period: '2020 - 2022',
+          description: 'Built responsive web applications and implemented complex animations.'
+        }
+      ]
     }
   },
   beforeRouteEnter(to, from, next) {
-    store.commit('transit', {
-      globalId: 50
+    next(vm => {
+      vm.$store.commit('transit', {
+        globalId: 2
+      });
     });
-    next();
   },
-  async created() {
+  created() {
     window.addEventListener('wheel', this.wheel, { passive: false });
-    window.addEventListener('touchstart', this.touchstart);
-    window.addEventListener('touchmove', this.touchmove);
-    this.scrollY = 0;
-    this.anchorY = 0;
-    this.anchorYPrev = 0;
-    this.$store.commit('setScrollProgress', 0);
   },
   async mounted() {
     this.$store.commit('changeBackground', {
@@ -64,211 +56,264 @@ export default {
     });
     this.$store.commit('showHomeObjs', false);
     this.$store.commit('showWorksObjs', {
-      index: 0,
-      direction: 1
+      direction: -1
     });
     this.$store.commit('showWhoIAmObjs', true);
     await sleep(500);
     this.$store.commit('showUI');
-    this.isRendering = true;
-    this.resize();
-    this.update();
   },
   destroyed() {
     window.removeEventListener('wheel', this.wheel, { passive: false });
-    window.removeEventListener('touchstart', this.touchstart);
-    window.removeEventListener('touchmove', this.touchmove);
-    this.isRendering = false;
   },
   methods: {
-    update() {
-      this.scrollY =
-        Math.floor((this.scrollY + (this.anchorY - this.scrollY) / 10) * 100) /
-        100;
-      this.$store.commit(
-        'setScrollProgress',
-        this.scrollY / (this.clientHeight - this.$store.state.resolution.y)
-      );
-      if (this.isRendering === true) {
-        requestAnimationFrame(this.update);
-      }
-    },
     wheel(e) {
       e.preventDefault();
-
       const n = normalizeWheel(e);
-      const { state, commit } = this.$store;
-
-      if (state.isWheeling === true) return;
-
-      if (this.scrollY < 1 && n.pixelY < 0) {
-        // Go to the previous page.
-        commit('startWheeling');
-        this.$router.push(`/works/${state.works[state.works.length - 1].key}/`);
-      } else {
-        // Scroll the content of the current page.
-        this.anchorY = MathEx.clamp(
-          this.anchorY + n.pixelY,
-          0,
-          this.clientHeight - state.resolution.y
-        );
+      
+      if (Math.abs(n.pixelY) < 10) return;
+      
+      if (n.pixelY < 0) {
+        // Scroll up - go back to works
+        this.$router.push('/works');
       }
-    },
-    touchstart() {
-      this.anchorYPrev = this.anchorY;
-    },
-    touchmove() {
-      const { state, commit, dispatch } = this.$store;
-
-      if (state.isTouchMoving === true) {
-        if (this.scrollY < 1 && state.touchMove.y > 10) {
-          // Go to the previous page.
-          dispatch(
-            'debounceRouterPush',
-            `/works/${state.works[state.works.length - 1].key}/`
-          );
-          commit('touchEnd');
-        } else {
-          // Scroll the content of the current page.
-          this.anchorY = MathEx.clamp(
-            this.anchorYPrev - state.touchMove.y * 1.5,
-            0,
-            this.clientHeight - state.resolution.y
-          );
-        }
-      }
-    },
-    resize() {
-      this.clientHeight = this.$refs['whoiam-wrap'].clientHeight;
-      this.anchorY = MathEx.clamp(
-        this.anchorY,
-        0,
-        this.clientHeight - this.$store.state.resolution.y
-      );
-      this.$store.commit(
-        'setScrollProgress',
-        this.scrollY / (this.clientHeight - this.$store.state.resolution.y)
-      );
     }
   }
 };
 </script>
 
 <template lang="pug">
-.p-view-wrap
-  .p-whoiam-wrap(
-    :style = 'styles'
-    ref = 'whoiam-wrap'
-    )
-    .p-whoiam-wrap__in
-      WhoIAmHeading
-      WhoIAmSection(
-        :num = '1'
-        :scrollY = 'scrollY'
-        :parallaxRatio = '0.1'
-        )
-        h2
-          |I'm a Web Developer.
-          br
-          |Just love World-Wide-Web.
-        p
-          |I love the web. I look forward to all the possibilities of the Web. Right now, I'm full of development with WebGL and Vue.js, but that's not all I'm interested in. The ever-expanding web world is very attractive. I will continue to develop the web.
-        p
-          |My career as a web developer started in 2006.
-        p
-          |As a teenager, I didn't go to college, so I don't have any degree right now. I also have no professional education on the web or programming. I have a career and track record of more than ten years as a web developer, but all that I did was blessed with good luck.
-        p
-          |The Japanese web industry is very rough and sloppy. There is still plenty of room for an empty-handed human like me. I was able to blend into the industry, and gradually acquire skills in business. Although I'm still not an expert in a particular genre, I've fully benefited from such an environment and still work as a front-end development handyman in many different types of work.
-      WhoIAmSection(
-        :num = '2'
-        )
-        h2
-          |Expressing my identity
-          br
-          |as a Japanese Developer.
-        p
-          |When I started thinking about renewing my site, I didn't want to make this site just a portfolio. I explored what my identity was and tried to express it as much as possible using whatever technology I have now.
-        p
-          |Japan, where I was born, is a wealthy and peaceful country, but now it is on a gradual decline. The generations of my grandfather and father have prospered after a war defeat and economic growth, but our generation has not experienced the harsh like them. I think our generation is always indulging in our enjoyment, devouring what the previous generation has cultivated. The fact that I focus only on what I find fun without aiming for an expert seems to have such generational aspects and a great cause and effect. I thought that is just my identity.
-      WhoIAmSection(
-        :num = '3'
-        :scrollY = 'scrollY'
-        :parallaxRatio = '0.1'
-        )
-        p
-          |I have selected skull and flower objects as motifs for prosperity and death. To make them more ephemeral and vacuity, I colored these in brilliant golden color. The development way is composite with three.js and Vue-CLI. By these means, I'm proud that I have been able to reflect my innerness, generation, and physicality on this site.
-        p
-          |Initially, I planned to develop this site alone, but fortunately, I was able to get the help of my friend and designer Shunsuke Iseki, who has world-class skills. I was able to experience his art direction skills up close and was impressed by his precise work. I appreciate his excellent performance.
-      WhoIAmLinks(
-        :scrollY = 'scrollY'
-        :parallaxRatio = '0.05'
-        )
-      WhoIAmThanks
+  .who-i-am
+    .who-i-am-content
+      .section.intro
+        h1.main-title Who I Am
+        p.intro-text
+          | I'm a passionate web developer who loves creating beautiful, 
+          | interactive experiences on the World Wide Web. I specialize in 
+          | combining modern web technologies with creative coding to bring 
+          | digital ideas to life.
+      
+      .section.about
+        h2.section-title About Me
+        p.about-text
+          | With a background in both design and development, I bridge the gap 
+          | between aesthetics and functionality. I'm particularly fascinated by 
+          | WebGL, creative animations, and the endless possibilities of what 
+          | we can create in the browser.
+        
+        p.about-text
+          | When I'm not coding, you can find me exploring nature, drawing 
+          | inspiration from organic forms and natural phenomena - which often 
+          | find their way into my digital creations.
+      
+      .section.skills
+        h2.section-title Skills & Technologies
+        .skills-grid
+          .skill-item(v-for="skill in skills" :key="skill") {{ skill }}
+      
+      .section.experience
+        h2.section-title Experience
+        .experience-list
+          .experience-item(v-for="exp in experience" :key="exp.title")
+            .exp-header
+              h3.exp-title {{ exp.title }}
+              span.exp-period {{ exp.period }}
+            .exp-company {{ exp.company }}
+            p.exp-description {{ exp.description }}
+      
+      .section.contact
+        h2.section-title Let's Connect
+        p.contact-text
+          | I'm always interested in new opportunities and collaborations. 
+          | Feel free to reach out if you'd like to work together!
+        
+        .contact-links
+          a.contact-link(href="mailto:hello@example.com") Email
+          a.contact-link(href="#") GitHub
+          a.contact-link(href="#") LinkedIn
+          a.contact-link(href="#") Twitter
+      
+      .who-i-am-hint
+        p Scroll up to go back to works
 </template>
 
 <style lang="scss">
 @import '@/assets/scss/foundation/mixins';
 
-.p-whoiam-wrap {
-  @include l-more-than-mobile {
-    margin-right: 7.5%;
-    margin-left: 7.5%;
-    padding-bottom: 300px;
-  }
+.who-i-am {
+  min-height: 100vh;
+  padding: 4rem 2rem;
+  position: relative;
+  z-index: 10;
+  
   @include l-mobile {
-    margin-right: 44px;
-    margin-left: 44px;
-    padding-bottom: 44px;
-  }
-  &__in {
-    position: relative;
-    margin-top: -25px;
+    padding: 2rem 1rem;
   }
 }
 
-// Media query mixins
-@mixin l-more-than-mobile {
-  @media screen and (min-width: 768px) {
-    @content;
+.who-i-am-content {
+  max-width: 900px;
+  margin: 0 auto;
+  color: white;
+}
+
+.section {
+  margin-bottom: 4rem;
+  
+  &.intro {
+    text-align: center;
+    margin-bottom: 5rem;
+    
+    .main-title {
+      font-size: 4rem;
+      font-weight: 300;
+      margin-bottom: 2rem;
+      
+      @include l-mobile {
+        font-size: 2.5rem;
+      }
+    }
+    
+    .intro-text {
+      font-size: 1.4rem;
+      line-height: 1.7;
+      opacity: 0.9;
+      max-width: 600px;
+      margin: 0 auto;
+    }
   }
 }
 
-@mixin l-mobile {
-  @media screen and (max-width: 767px) {
-    @content;
+.section-title {
+  font-size: 2.5rem;
+  font-weight: 400;
+  margin-bottom: 2rem;
+  color: #FFD700;
+  
+  @include l-mobile {
+    font-size: 2rem;
   }
 }
 
-@mixin l-tablet {
-  @media screen and (min-width: 768px) and (max-width: 1024px) {
-    @content;
+.about-text {
+  font-size: 1.2rem;
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+  opacity: 0.9;
+}
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  
+  .skill-item {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-3px);
+    }
   }
 }
 
-@mixin l-desktop {
-  @media screen and (min-width: 1025px) {
-    @content;
+.experience-list {
+  .experience-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    border-left: 4px solid #FFD700;
+    
+    .exp-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      
+      @include l-mobile {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+      
+      .exp-title {
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin: 0;
+      }
+      
+      .exp-period {
+        font-size: 0.9rem;
+        opacity: 0.7;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+      }
+    }
+    
+    .exp-company {
+      font-size: 1.1rem;
+      color: #87CEEB;
+      margin-bottom: 1rem;
+    }
+    
+    .exp-description {
+      font-size: 1rem;
+      line-height: 1.6;
+      opacity: 0.9;
+      margin: 0;
+    }
   }
 }
 
-// Common utility mixins
-@mixin clearfix {
-  &::after {
-    content: "";
-    display: table;
-    clear: both;
+.contact-text {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+}
+
+.contact-links {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  
+  .contact-link {
+    display: inline-block;
+    padding: 0.8rem 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
   }
 }
 
-@mixin visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+.who-i-am-hint {
+  text-align: center;
+  margin-top: 4rem;
+  opacity: 0.6;
+  
+  p {
+    margin: 0;
+    animation: fadeInOut 2s infinite;
+  }
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
 }
 </style>
