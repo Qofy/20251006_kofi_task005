@@ -84,17 +84,25 @@ export default createStore({
       state.currentWorksId = opts.currentWorksId ? opts.currentWorksId : 0;
     },
     changeBackground(state, { isHome, hasDelay }) {
-      state.webgl.changeBackground(isHome, hasDelay);
+      if (state.webgl && state.webgl.changeBackground) {
+        state.webgl.changeBackground(isHome, hasDelay);
+      }
     },
     showHomeObjs(state, bool) {
-      state.webgl.showHomeObjs(bool);
+      if (state.webgl && state.webgl.showHomeObjs) {
+        state.webgl.showHomeObjs(bool);
+      }
     },
     showWorksObjs(state, { index, direction }) {
-      state.webgl.showWorksObjs(index, direction, state.positionFromWorks);
-      state.positionFromWorks = direction;
+      if (state.webgl && state.webgl.showWorksObjs) {
+        state.webgl.showWorksObjs(index, direction, state.positionFromWorks);
+        state.positionFromWorks = direction;
+      }
     },
     showWhoIAmObjs(state, bool) {
-      state.webgl.showWhoIAmObjs(bool);
+      if (state.webgl && state.webgl.showWhoIAmObjs) {
+        state.webgl.showWhoIAmObjs(bool);
+      }
     },
     startWheeling(state) {
       state.isWheeling = true;

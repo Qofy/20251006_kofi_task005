@@ -23,7 +23,7 @@ export default {
   },
   components: {
     GlobalTitle,
-    UtilityNavi,
+    UtilityNavi, 
     WorksNavi,
     Preloader,
     Guide
@@ -37,28 +37,17 @@ export default {
     };
   },
   async created() {
-    const { state, dispatch } = this.$store;
-
-    document.body.append(state.canvas);
-    state.canvas.style = `
-        position: absolute;
-        top: 0;
-        left: 0;
-      `;
-
-    // On global events.
-    window.addEventListener('resize', debounce(this.resize, 100));
-    window.addEventListener('mousemove', this.mousemove);
-    document.addEventListener('mouseleave', this.mouseleave);
-    document.addEventListener('touchstart', this.touchstart);
-    document.addEventListener('touchmove', this.touchmove);
-    document.addEventListener('touchend', this.touchend);
-
-    await sleep(500);
-    this.$store.commit('showPreloader');
-    this.update();
-    await dispatch('initWebGL');
-    state.webgl.start(state.canvas, this.$store);
+    // Initialize WebGL
+    const WebGLManager = await import('@/webgl/index.js');
+    const webgl = new WebGLManager.default();
+    
+    this.$store.commit('initWebGL', webgl);
+    
+    // Start WebGL with canvas and store
+    webgl.start(this.$store.state.canvas, this.$store);
+    
+    // Remove the continuous update loop - WebGL handles its own animation
+    console.log('🚀 App created - WebGL should be running!');
   },
   computed: {
     transitionName() {
@@ -68,34 +57,6 @@ export default {
     }
   },
   methods: {
-    update() {
-      const {
-        webgl,
-        preloadMax,
-        preloadProgress,
-        isLoaded
-      } = this.$store.state;
-      if (isLoaded === false) {
-        this.$store.commit('updatePreloadProgress');
-        if (preloadProgress / preloadMax > 0.999) {
-          this.loaded();
-        }
-      } else {
-        webgl.update();
-      }
-      requestAnimationFrame(this.update);
-    },
-    async loaded() {
-      this.resize();
-      this.$store.commit('loaded');
-      if (this.$route.name === 'home') {
-        await sleep(800);
-      } else {
-        await sleep(2400);
-      }
-      this.$store.state.webgl.play();
-      this.$store.commit('showView');
-    },
     resize() {
       const { canvas, resolution, webgl } = this.$store.state;
 
@@ -170,21 +131,13 @@ export default {
 </script>
 
 <template lang="pug">
-  div
+  #app
+    Preloader(v-if="$store.state.isShownPreloader && !$store.state.isLoaded")
+    router-view(v-if="$store.state.isShowView")
     GlobalTitle
     UtilityNavi
     WorksNavi
-    main
-      transition(
-        :name = 'transitionName'
-        appear
-        v-if = '$store.state.isShowView === true'
-        )
-        router-view
-    Preloader
-    Guide(
-      v-if = 'false'
-      )
+    Guide
 </template>
 
 <style lang="scss">
