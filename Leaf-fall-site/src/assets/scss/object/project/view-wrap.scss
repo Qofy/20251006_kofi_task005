@@ -1,0 +1,35 @@
+@import '../../foundation/mixins';
+@import '../../foundation/global';
+
+.view {
+  min-height: 100vh;
+  position: relative;
+  z-index: 10;
+  
+  @include l-more-than-mobile {
+    padding: 0;
+  }
+}
+
+// Vue transition classes
+.view-enter-active,
+.view-leave-active {
+  transition: all 0.6s $easeOutCirc;
+}
+
+.view-enter-from,
+.view-leave-to {
+  opacity: 0;
+  transform: translateY(50px);
+}
+
+.view-asc-enter-active,
+.view-asc-leave-active {
+  transition: all 0.6s $easeOutCirc;
+}
+
+.view-asc-enter-from,
+.view-asc-leave-to {
+  opacity: 0;
+  transform: translateY(-50px);
+}
